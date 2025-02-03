@@ -1,1 +1,2 @@
 # AMSE
+Il s'agit du README POINT MDD
