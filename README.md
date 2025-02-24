@@ -7,3 +7,11 @@ L'application comporte 3 pages:
     -HomePage sur laquelle une oeuvre du catalogue vous sera proposée au hasard.
     -PageFavoris sur laquelle vous pourrez consulter vos favoris et en découvrir les détails.
     -PageRecherche sur laquelle vous pourrez rechercher si une oeuvre est présente dans le catalogue grâce à des filtres.
+
+Pour lancer l'application:
+- git clone https://github.com/SofianeZippo/AMSE
+- cd AMSE/tp1
+- flutter create .
+- flutter run
+
+Amusez-vous bien !
