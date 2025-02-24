@@ -31,12 +31,13 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
+  int randomIndex = 0; // Déclare une variable pour l'index aléatoire.
 
   void getNext() {
-    current = WordPair.random();
+    randomIndex = Random().nextInt(4)+1; // Générez un index aléatoire.
     notifyListeners();
   }
-  
+
   var favorites = <int>[];
 
   void toggleFavorite(int index) {
@@ -48,6 +49,7 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 }
+
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -80,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Widget page;
     switch (selectedIndex) {
       case 0:
-        page = GeneratorPage(csvData: csvData, IndexData: IndexData);
+        page = GeneratorPage(csvData: csvData,);
         break;
       case 1:
         page = PageFavoris(csvData: csvData, IndexData: IndexData);
@@ -139,27 +141,25 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class GeneratorPage extends StatelessWidget {
   final List<List<dynamic>> csvData;
-  int IndexData;
 
-  GeneratorPage({required this.csvData, required this.IndexData}); 
+  GeneratorPage({required this.csvData});
 
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
 
     IconData icon;
-    if (appState.favorites.contains(IndexData)) {
+    if (appState.favorites.contains(appState.randomIndex)) {
       icon = Icons.favorite;
     } else {
       icon = Icons.favorite_border;
     }
 
-    String imageName = csvData[IndexData][csvData[0].length-1];
+    String imageName = csvData[appState.randomIndex][csvData[0].length - 1];
 
     return Column(
       children: [
         SizedBox(height: 40),
-
         // Grand Titre et Sous-titre
         Text(
           'Bienvenue sur Saphir',
@@ -177,26 +177,24 @@ class GeneratorPage extends StatelessWidget {
           ),
         ),
         SizedBox(height: 10),
-
         Center(
           child: Text(
-          'Découvrez de nouvelles œuvres ou répertoriez celles que vous aimez déjà !!',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 20,
-            color: Colors.white,
-            shadows: [
-              Shadow(
-                blurRadius: 10.0,
-                color: Colors.black,
-                offset: Offset(3.0, 3.0),
-              ),
-            ],
+            'Découvrez de nouvelles œuvres ou répertoriez celles que vous aimez déjà !!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  blurRadius: 10.0,
+                  color: Colors.black,
+                  offset: Offset(3.0, 3.0),
+                ),
+              ],
+            ),
           ),
-        ),),
-        
+        ),
         SizedBox(height: 60),
-
         Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -214,7 +212,7 @@ class GeneratorPage extends StatelessWidget {
                         height: 200,
                       ),
                       Text(
-                        '${csvData[IndexData][0]}',
+                        '${csvData[appState.randomIndex][0]}',
                         style: Theme.of(context).textTheme.displayMedium!.copyWith(color: Theme.of(context).colorScheme.onSecondary),
                       ),
                     ],
@@ -227,13 +225,13 @@ class GeneratorPage extends StatelessWidget {
                 children: [
                   ElevatedButton.icon(
                     onPressed: () {
-                      appState.toggleFavorite(IndexData);
+                      appState.toggleFavorite(appState.randomIndex);
 
-                      if(appState.favorites.contains(IndexData)){
+                      if (appState.favorites.contains(appState.randomIndex)) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Favori Ajouté!')),
                         );
-                      }else{
+                      } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Favori Retiré!')),
                         );
@@ -245,10 +243,7 @@ class GeneratorPage extends StatelessWidget {
                   SizedBox(width: 10),
                   ElevatedButton(
                     onPressed: () {
-                      appState.getNext();
-                      IndexData < csvData.length - 1
-                          ? IndexData++
-                          : IndexData = 0;
+                      appState.getNext(); // Appel pour obtenir un nouvel index aléatoire.
                     },
                     child: Text('Suivant'),
                   ),
@@ -261,6 +256,7 @@ class GeneratorPage extends StatelessWidget {
     );
   }
 }
+
 
 class PageFavoris extends StatelessWidget {
   final List<List<dynamic>> csvData;
