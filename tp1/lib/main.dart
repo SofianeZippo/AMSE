@@ -86,7 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
         page = PageFavoris(csvData: csvData, IndexData: IndexData);
         break;
       case 2:
-        page = PageRecherche();
+        page = PageRecherche(csvData: csvData);
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -301,7 +301,7 @@ class PageFavoris extends StatelessWidget {
                     bool isFavorite = appState.favorites.contains(num);
 
                     return AlertDialog(
-                      scrollable: true,
+                      //scrollable: true,
                       title: Container(
                         color: Colors.blueGrey[50], // Arrière-plan personnalisé pour le titre
                         padding: EdgeInsets.all(10),
@@ -313,34 +313,31 @@ class PageFavoris extends StatelessWidget {
                           ),
                         ),
                       ),
-                      content: SingleChildScrollView(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(maxHeight: 500), // Limite la hauteur du contenu du dialog
-                          child: Column(
-                            children: [
-                              Image.asset(
-                                'assets/images/${csvData[num][csvData[0].length - 1]}',
-                                width: 200,
-                                height: 200,
-                              ),
-                              DataTable(
-                                columns: const [
-                                  DataColumn(label: Text('')),
-                                  DataColumn(label: Text('')),
-                                ],
-                                rows: [
-                                  for (int i = 0; i < csvData[0].length - 1; i++)
-                                    DataRow(cells: [
-                                      DataCell(Text(
-                                        '${csvData[0][i]}',
-                                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                                      )),
-                                      DataCell(Text('${csvData[num][i]}')),
-                                    ])
-                                ],
-                              ),
-                            ],
-                          ),
+                      content: SingleChildScrollView(  // Ajouter SingleChildScrollView ici
+                        child: Column(
+                          children: [
+                            Image.asset(
+                              'assets/images/${csvData[num][csvData[0].length - 1]}',
+                              width: 200,
+                              height: 200,
+                            ),
+                            DataTable(
+                              columns: const [
+                                DataColumn(label: Text('')),
+                                DataColumn(label: Text('')),
+                              ],
+                              rows: [
+                                for (int i = 0; i < csvData[0].length - 2; i++)
+                                  DataRow(cells: [
+                                    DataCell(Text(
+                                      '${csvData[0][i]}',
+                                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                    )),
+                                    DataCell(Text('${csvData[num][i]}')),
+                                  ])
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                       actions: [
@@ -385,19 +382,231 @@ class PageFavoris extends StatelessWidget {
 }
 
 
-class PageRecherche extends StatelessWidget {
-  PageRecherche();
+class PageRecherche extends StatefulWidget {
+  final List<List<dynamic>> csvData;
+
+  PageRecherche({required this.csvData});
+
+  @override
+  _PageRechercheState createState() => _PageRechercheState();
+}
+
+class _PageRechercheState extends State<PageRecherche> {
+  TextEditingController _searchController = TextEditingController();
+  List<List<dynamic>> _filteredData = [];
+  String? _selectedDate;
+  String? _selectedType;
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredData = widget.csvData;
+  }
+
+  // Fonction pour effectuer la recherche avec des filtres
+  void _filterSearchResults(String query) {
+    List<List<dynamic>> results = [];
+    if (query.isEmpty && _selectedDate == null && _selectedType == null) {
+      results = List.from(widget.csvData); // Si la recherche est vide, on retourne toutes les données
+    } else {
+      results = widget.csvData.where((item) {
+        // Filtrer par nom (colonne 0)
+        bool matchesName = item[0].toString().toLowerCase().contains(query.toLowerCase());
+
+        // Filtrer par date (colonne 1)
+        bool matchesDate = _selectedDate == null || item[1].toString().toLowerCase() == _selectedDate.toString().toLowerCase();
+
+        // Filtrer par type (colonne 2)
+        bool matchesType = _selectedType == null || item[2].toString().toLowerCase() == _selectedType.toString().toLowerCase();
+
+        return matchesName && matchesDate && matchesType;
+      }).toList();
+    }
+    setState(() {
+      _filteredData = results;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>(); // Pour gérer les favoris
+
     return Column(
       children: [
-        Text('Cherchez un Média'),
-        SearchBar(
-          leading: Icon(Icons.search),
-          hintText: 'Recherchez une œuvre dans notre catalogue',
-          overlayColor: WidgetStateProperty.all(const Color.fromARGB(255, 243, 246, 243)),
-          backgroundColor: WidgetStateProperty.all(const Color.fromARGB(255, 150, 217, 217)),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              labelText: 'Recherchez un Média',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (query) {
+              _filterSearchResults(query);
+            },
+          ),
+        ),
+        
+        // Filtres : Type et Date
+        Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  hint: Text("Filtrer par Type"),
+                  value: _selectedType,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedType = newValue;
+                      _filterSearchResults(_searchController.text);
+                    });
+                  },
+                  items: [
+                    null, // Option pour ne pas filtrer
+                    ...widget.csvData
+                        .map((item) => item[2].toString())
+                        .toSet()
+                        .toList() // Éviter les doublons
+                  ]
+                      .map<DropdownMenuItem<String>>((String? value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value ?? 'Tous'),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  hint: Text("Filtrer par Date"),
+                  value: _selectedDate,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedDate = newValue;
+                      _filterSearchResults(_searchController.text);
+                    });
+                  },
+                  items: [
+                    null, // Option pour ne pas filtrer
+                    ...widget.csvData
+                        .map((item) => item[1].toString())
+                        .toSet()
+                        .toList() // Éviter les doublons
+                  ]
+                      .map<DropdownMenuItem<String>>((String? value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value ?? 'Toutes'),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // Affichage des résultats filtrés
+        Expanded(
+          child: ListView.builder(
+            itemCount: _filteredData.length,
+            itemBuilder: (context, index) {
+              var item = _filteredData[index];
+              String imageName = item[item.length - 1]; // Nom du fichier image
+
+              return ListTile(
+                leading: Image.asset(
+                  'assets/images/$imageName',
+                  width: 40,
+                  height: 40,
+                ),
+                title: Text(item[0]),  // Affiche le nom de l'élément
+                subtitle: Text(item[2]), // Affiche le type de l'élément (colonne 2)
+                trailing: ElevatedButton(
+                  onPressed: () {
+                    // Afficher les détails dans un Dialog
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text('Détails de l\'élément'),
+                          content: Column(
+                            children: [
+                              Image.asset(
+                                'assets/images/$imageName',
+                                width: 200,
+                                height: 200,
+                              ),
+                              DataTable(
+                                columns: const [
+                                  DataColumn(label: Text('')),
+                                  DataColumn(label: Text('')),
+                                ],
+                                rows: [
+                                  for(int i=0;i<widget.csvData[0].length-2;i++)
+                                    DataRow(cells: [
+                                      DataCell(Text('${widget.csvData[0][i]}',style: TextStyle(fontWeight: FontWeight.bold))),
+                                      DataCell(Text('${item[i]}'))
+                                    ]),
+                                ],
+                              ),
+                            ],
+                          ),
+                          actions: [
+                            // Bouton pour ajouter/retirer des favoris
+                            TextButton(
+                              onPressed: () {
+                                appState.toggleFavorite(item[widget.csvData[0].length -2]);
+                                Navigator.of(context).pop(); // Fermer le dialog
+
+                                // Afficher un SnackBar pour informer de l'ajout/retrait
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(appState.favorites.contains(index)
+                                        ? 'Ajouté aux favoris!'
+                                        : 'Retiré des favoris!'),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                appState.favorites.contains(index)
+                                    ? 'Retirer des favoris'
+                                    : 'Ajouter aux favoris',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            // Bouton de fermeture
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(); // Fermer le dialog
+                              },
+                              child: Text(
+                                'Fermer',
+                                style: TextStyle(
+                                  color: Colors.blueAccent, // Texte du bouton en bleu
+                                  fontWeight: FontWeight.bold, // Bouton en gras
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: Text('Détails'),
+                ),
+              );
+            },
+          ),
         ),
       ],
     );
