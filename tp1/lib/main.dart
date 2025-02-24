@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
-  int randomIndex = 0; // Déclare une variable pour l'index aléatoire.
+  int randomIndex = 1; // Déclare une variable pour l'index aléatoire.
 
   void getNext() {
     randomIndex = Random().nextInt(29)+1; // Générez un index aléatoire en évitant l'indice 0.
@@ -298,19 +298,20 @@ class PageFavoris extends StatelessWidget {
                     bool isFavorite = appState.favorites.contains(num);
 
                     return AlertDialog(
-                      //scrollable: true,
+                      
                       title: Container(
-                        color: Colors.blueGrey[50], // Arrière-plan personnalisé pour le titre
+                        color: Colors.blueGrey[50], 
                         padding: EdgeInsets.all(10),
                         child: Text(
-                          'Détails de l\'élément',
+                          'Détails',
                           style: TextStyle(
-                            color: Colors.black, // Titre en noir
-                            fontWeight: FontWeight.bold, // Titre en gras
+                            color: Colors.black, 
+                            fontWeight: FontWeight.bold, 
                           ),
                         ),
                       ),
-                      content: SingleChildScrollView(  // Ajouter SingleChildScrollView ici
+                      content: SingleChildScrollView(
+                        scrollDirection: Axis.vertical,
                         child: Column(
                           children: [
                             Image.asset(
@@ -319,6 +320,7 @@ class PageFavoris extends StatelessWidget {
                               height: 200,
                             ),
                             DataTable(
+                              
                               columns: const [
                                 DataColumn(label: Text('')),
                                 DataColumn(label: Text('')),
@@ -330,7 +332,10 @@ class PageFavoris extends StatelessWidget {
                                       '${csvData[0][i]}',
                                       style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                                     )),
-                                    DataCell(Text('${csvData[num][i]}')),
+                                    DataCell(
+                                      Text('${csvData[num][i]}',
+                                      style: TextStyle(fontSize: 20))),
+                                      
                                   ])
                               ],
                             ),
@@ -531,48 +536,67 @@ class _PageRechercheState extends State<PageRecherche> {
                     showDialog(
                       context: context,
                       builder: (context) {
-                        return AlertDialog(
-                          title: Text('Détails'),
-                          content: Column(
-                            children: [
-                              Image.asset(
-                                'assets/images/$imageName',
-                                width: 200,
-                                height: 200,
+                      return  AlertDialog(
+                          title: Container(
+                            color: Colors.blueGrey[50], // Arrière-plan personnalisé pour le titre
+                            padding: EdgeInsets.all(10),
+                            child: Text(
+                              'Détails de l\'élément',
+                              style: TextStyle(
+                                color: Colors.black, // Titre en noir
+                                fontWeight: FontWeight.bold, // Titre en gras
                               ),
-                              DataTable(
-                                columns: const [
-                                  DataColumn(label: Text('')),
-                                  DataColumn(label: Text('')),
-                                ],
-                                rows: [
-                                  for(int i=0;i<widget.csvData[0].length-2;i++)
-                                    DataRow(cells: [
-                                      DataCell(Text('${widget.csvData[0][i]}',style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataCell(Text('${item[i]}'))
-                                    ]),
-                                ],
-                              ),
-                            ],
+                            ),
+                          ),
+                          content: SingleChildScrollView(  // Utiliser SingleChildScrollView ici pour rendre le contenu défilable
+                            child: Column(
+                              children: [
+                                Image.asset(
+                                  'assets/images/${item[widget.csvData[0].length - 1]}',
+                                  width: 200,
+                                  height: 200,
+                                ),
+                                // Utiliser SingleChildScrollView pour permettre un défilement horizontal
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,  // Permet le défilement horizontal
+                                  child: DataTable(
+                                    columns: const [
+                                      DataColumn(label: Text('')),
+                                      DataColumn(label: Text('')),
+                                    ],
+                                    rows: [
+                                      for (int i = 0; i < widget.csvData[0].length - 2; i++)
+                                        DataRow(cells: [
+                                          DataCell(Text(
+                                            '${widget.csvData[0][i]}',
+                                            style: TextStyle(fontWeight: FontWeight.bold),
+                                          )),
+                                          DataCell(Text('${item[i]}')),
+                                        ]),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           actions: [
                             // Bouton pour ajouter/retirer des favoris
                             TextButton(
                               onPressed: () {
-                                appState.toggleFavorite(item[widget.csvData[0].length -2]);
+                                appState.toggleFavorite(item[widget.csvData[0].length-2]);
                                 Navigator.of(context).pop(); // Fermer le dialog
 
                                 // Afficher un SnackBar pour informer de l'ajout/retrait
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(appState.favorites.contains(index)
+                                    content: Text(appState.favorites.contains(item[widget.csvData[0].length-2])
                                         ? 'Ajouté aux favoris!'
                                         : 'Retiré des favoris!'),
                                   ),
                                 );
                               },
                               child: Text(
-                                appState.favorites.contains(index)
+                                appState.favorites.contains(item[widget.csvData[0].length-2])
                                     ? 'Retirer des favoris'
                                     : 'Ajouter aux favoris',
                                 style: TextStyle(
@@ -596,6 +620,8 @@ class _PageRechercheState extends State<PageRecherche> {
                             ),
                           ],
                         );
+
+
                       },
                     );
                   },
