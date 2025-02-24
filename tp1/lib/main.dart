@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:csv/csv.dart'; //nécessaire pour lire les fichiers csv où sont renseignées les données
 import 'dart:math'; //nécessaire afin de manipuler l'aléatoire
-/*nombreRandom = Random().nextInt(200)*/
+
 
 void main() {
   runApp(MyApp());
@@ -34,7 +34,7 @@ class MyAppState extends ChangeNotifier {
   int randomIndex = 0; // Déclare une variable pour l'index aléatoire.
 
   void getNext() {
-    randomIndex = Random().nextInt(4)+1; // Générez un index aléatoire.
+    randomIndex = Random().nextInt(29)+1; // Générez un index aléatoire en évitant l'indice 0.
     notifyListeners();
   }
 
@@ -74,6 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     setState(() {
       csvData = listData;
+      print(csvData[3]);
     });
   }
 
@@ -399,7 +400,7 @@ class _PageRechercheState extends State<PageRecherche> {
     _filteredData = widget.csvData;
   }
 
-  // Fonction pour effectuer la recherche avec des filtres
+
   void _filterSearchResults(String query) {
     List<List<dynamic>> results = [];
     if (query.isEmpty && _selectedDate == null && _selectedType == null) {
@@ -531,7 +532,7 @@ class _PageRechercheState extends State<PageRecherche> {
                       context: context,
                       builder: (context) {
                         return AlertDialog(
-                          title: Text('Détails de l\'élément'),
+                          title: Text('Détails'),
                           content: Column(
                             children: [
                               Image.asset(
